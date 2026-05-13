@@ -2,6 +2,8 @@ package com.tenco.blog.user;
 
 import com.tenco.blog._core.errors.Exception400;
 import com.tenco.blog._core.errors.Exception404;
+import com.tenco.blog._core.errors.Exception500;
+import com.tenco.blog.util.FileUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,24 +23,47 @@ public class UserService {
 
     /**
      * 회원 가입 처리
+     *
      * @param joinDTO (사용자 회원가입 요청 정보)
      * @return User (저장된 사용자 정보)
      */
+    //http://192.168.4.101:8080/join-form
     @Transactional
     public User 회원가입(UserRequest.JoinDTO joinDTO) {
         log.info("회원가입 서비스 시작");
 
+        // 회원가입시 사용자 이름 중복 체크
         userRepository.findByUsername(joinDTO.getUsername()).ifPresent(user -> {
             log.warn("회원가입 실패 - 중복된 사용자명 : {}", user.getUsername());
             throw new Exception400("이미 존재하는 사용자 이름입니다");
         });
-        User user = joinDTO.toEntity();
+
+        // 프로필 이미지 저장 기능 구현 (선택 사항)
+        String profileImageFilename = null;
+        if (joinDTO.getProfileImage() != null && joinDTO.getProfileImage().isEmpty() == false) {
+            // 사용자가 프로필 이미지를 업로드한 경우
+            // 파일 처리 기능은 별도 유틸리티 클래스를 따로 만들어서 사용( 추후 공통 사용되는 부분)
+            try {
+                // 이미지 파일이 맞는지 검증
+                if (FileUtil.isImageFile(joinDTO.getProfileImage()) == false) {
+                    throw new Exception400("이미지 파일만 업로드 가능합니다");
+                }
+                profileImageFilename = FileUtil.saveFile(joinDTO.getProfileImage(), FileUtil.IMAGES_DIR);
+            } catch (Exception e) {
+                //디스크 공간이 없거나, 권한이 없을 때
+                throw new Exception500("프로필 이미지 저장 실패");
+            }
+        }
+
+        // 코드 수정
+        User user = joinDTO.toEntity(profileImageFilename);
 
         return userRepository.save(user);
     }
 
     /**
      * 로그인 처리
+     *
      * @param loginDTO (사용자가 요청한 로그인 정보)
      * @return User(조회된 정보 세션 저장용)
      */
@@ -55,6 +80,7 @@ public class UserService {
 
     /**
      * 사용자 정보 조회 (프로필 정보 보기 활용)
+     *
      * @param id (User PK)
      * @return UserEntity
      */
@@ -70,7 +96,8 @@ public class UserService {
 
     /**
      * 사용자 정보 수정 처리 (프로필 업데이트)
-     * @param id  (User PK)
+     *
+     * @param id        (User PK)
      * @param updateDTO (사용자가 요청한 데이터)
      * @return User
      */

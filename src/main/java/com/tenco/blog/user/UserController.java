@@ -8,12 +8,25 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import java.io.IOException;
+
 @Slf4j
 @Controller // IoC
 @RequiredArgsConstructor // DI 처리
 public class UserController {
 
     private final UserService userService;
+
+    // 마이페이지 요청 화면
+    @GetMapping("/user/detail")
+    public String detailPage(Model model, HttpSession session) {
+        User sessionUser = (User) session.getAttribute("sessionUser");
+        model.addAttribute("user", sessionUser);
+
+
+
+        return "user/detail";
+    }
 
     // 프로필 수정 기능 요청
     @PostMapping("/user/update")
@@ -72,6 +85,13 @@ public class UserController {
     @PostMapping("/join")
     public String joinProc(UserRequest.JoinDTO joinDTO) {
         //  인증검사 x, 유효성 검사 하기 o
+
+//        System.out.println(joinDTO.getProfileImage().getBytes().length);
+//        System.out.println(joinDTO.getProfileImage().getContentType()); // jpg, png
+//        System.out.println(joinDTO.getProfileImage().getName()); // 속성의 이름
+//        System.out.println(joinDTO.getProfileImage().getOriginalFilename()); // 사진 이름
+//        System.out.println(joinDTO.getProfileImage().getSize());
+
         joinDTO.validate();
         userService.회원가입(joinDTO);
         return "redirect:/login-form";
