@@ -72,6 +72,7 @@ public class UserRequest {
     public static class UpdateDTO {
 
         private String password;
+        private MultipartFile profileImage; // 이미지 이름 가져옴(MultipartFile <- 파일쓸 때 사용)
 
         public void validate() {
             if (password == null || password.isBlank()) {

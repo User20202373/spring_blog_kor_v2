@@ -1,4 +1,4 @@
-package com.tenco.blog.util;
+package com.tenco.blog._core.util;
 
 // IoC 안함( 파일 기능 처리에만 동작할 수 있도록 static 메서드로 구현할 예정)
 
@@ -50,7 +50,20 @@ public class FileUtil {
         Files.copy(file.getInputStream(), filepath);
         return savedFileName;
     }
+
     // 2. 파일 삭제하는 기능.
+    public static void deleteFile(String fileName, String uploadDir) throws IOException {
+        if (fileName == null || fileName.isEmpty()) {
+            return;
+        }
+        //Path -> C://upload/xxx_a.png
+        Path filePath = Paths.get(uploadDir, fileName);
+        if (Files.exists(filePath)){
+            // 정확한 폴더 경로 존재 확인, 파일명 기준으로 파일이 존재 한다면
+            Files.delete(filePath); // 실제 폴더에서 파일 삭제 됨.
+        }
+    }
+
 
     // 3. 편의 기능 만들 예정( 이미지 파일이 맞는지만 확인)
     public static boolean isImageFile(MultipartFile file) {
